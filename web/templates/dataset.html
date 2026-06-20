@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section>
+  <h2>Датасет тикетов</h2>
+
+  <!-- Поиск -->
+  <form method="get" action="/dataset" class="search-bar">
+    <input type="text" name="q" placeholder="Поиск по теме или описанию..." value="{{ search_query or '' }}">
+    <button type="submit">Найти</button>
+    {% if search_query %}
+      <a href="/dataset" class="btn-secondary" style="padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:500">Очистить</a>
+    {% endif %}
+  </form>
+
+  <table>
+    <thead>
+      <tr>
+        <th style="width:10%">ID</th>
+        <th style="width:25%">Тема (Subject)</th>
+        <th style="width:45%">Описание (Description)</th>
+        <th style="width:10%">Время, ч</th>
+        <th style="width:10%">Тип</th>
+      </tr>
+    </thead>
+<tbody>
+     {% for t in tickets %}
+       <tr>
+         <td>{{ (page - 1) * per_page + loop.index }}</td>
+        <td><strong>{{ t["Ticket Subject"] }}</strong></td>
+        <td style="color:var(--muted);line-height:1.6">{{ t["Ticket Description"] }}</td>
+        <td>
+          {% set h = t.hours if t.hours is defined else "—" %}
+          <strong style="color:var(--accent)">{{ "%.1f"|format(h) if h is number else h }}</strong>
+        </td>
+        <td><span style="padding:4px 10px;border-radius:999px;background:rgba(37,99,235,0.1);color:var(--accent);font-size:13px;font-weight:500">{{ t["Ticket Type"] }}</span></td>
+      </tr>
+{% endfor %}
+    </tbody>
+   </table>
+
+   {% if total_pages > 1 %}
+   <div class="pagination" style="display:flex;gap:8px;align-items:center;justify-content:center;flex-wrap:wrap;margin-top:24px">
+     {% if page > 1 %}
+       <a href="/dataset?page={{ page - 1 }}{% if search_query %}&q={{ search_query|urlencode }}{% endif %}" style="padding:8px 16px;border:1px solid var(--border);border-radius:6px;text-decoration:none;color:var(--text);background:var(--card)">« Назад</a>
+     {% endif %}
+
+     {% for p in range(1, total_pages + 1) %}
+       {% if p == page or (p <= 5 and page <= 3) or (p >= page - 2 and p <= page + 2) or (p > total_pages - 5 and page > total_pages - 3) %}
+         {% if p == page %}
+           <span style="padding:8px 16px;border:1px solid var(--accent);border-radius:6px;background:var(--accent);color:#fff;font-weight:500">{{ p }}</span>
+         {% else %}
+           <a href="/dataset?page={{ p }}{% if search_query %}&q={{ search_query|urlencode }}{% endif %}" style="padding:8px 16px;border:1px solid var(--border);border-radius:6px;text-decoration:none;color:var(--text);background:var(--card)">{{ p }}</a>
+         {% endif %}
+       {% elif p == 2 or p == total_pages - 1 %}
+         <span style="padding:0 4px;color:var(--muted)">…</span>
+       {% endif %}
+     {% endfor %}
+
+     {% if page < total_pages %}
+       <a href="/dataset?page={{ page + 1 }}{% if search_query %}&q={{ search_query|urlencode }}{% endif %}" style="padding:8px 16px;border:1px solid var(--border);border-radius:6px;text-decoration:none;color:var(--text);background:var(--card)">Вперёд »</a>
+     {% endif %}
+   </div>
+   {% endif %}
+
+  <div style="margin-top:20px;color:var(--muted);font-size:14px">
+    Показано {{ tickets|length }} из {{ total }} тикетов
+  </div>
+</section>
+{% endblock %}

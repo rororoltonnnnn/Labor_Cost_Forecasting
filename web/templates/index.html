@@ -1,0 +1,77 @@
+<{% extends "base.html" %}
+
+{% block content %}
+<section>
+  <h2>Прогноз трудозатрат</h2>
+  <form method="get" action="/">
+    <div class="form-group">
+      <textarea name="q" rows="3" placeholder="Опишите проблему (например: printer paper jam error)" required>{{ q }}</textarea>
+    </div>
+    <div style="display:flex;gap:12px;align-items:center;margin-bottom:20px">
+      <label style="display:flex;align-items:center;gap:8px;cursor:pointer;color:var(--text);font-weight:500">
+        <input type="checkbox" name="use_ai" value="true" {% if use_ai %}checked{% endif %}>
+        Использовать Polza AI
+      </label>
+    </div>
+    <button type="submit">Анализировать</button>
+  </form>
+
+  {% if error %}
+  <div class="flash" style="background:rgba(220,38,38,0.1);border-color:var(--danger);color:var(--danger)">
+    {{ error }}
+  </div>
+  {% endif %}
+
+  {% if result %}
+  <div class="result-card">
+    <h3>Результат</h3>
+    <div class="metric-row">
+      <div class="metric">
+        <div class="metric-label">Прогноз, часы</div>
+        <div class="metric-value">{{ "%.1f"|format(result.final) }}</div>
+      </div>
+      <div class="metric">
+        <div class="metric-label">Confidence</div>
+        <div class="metric-value">{{ "%.3f"|format(result.confidence) }}</div>
+      </div>
+      <div class="metric">
+        <div class="metric-label">Найдено тикетов</div>
+        <div class="metric-value">{{ result.count }}</div>
+      </div>
+    </div>
+
+    {% if result.ai_fallback %}
+    <div class="flash" style="background:rgba(245,158,11,0.1);border-color:var(--warn);color:var(--warn)">
+      Недостаточно релевантных тикетов. Использован прогноз ИИ.
+    </div>
+    {% endif %}
+
+    {% if result.ai %}
+    <div style="margin-top:16px;padding:14px;background:rgba(37,99,235,0.06);border:1px solid rgba(37,99,235,0.2);border-radius:8px;font-size:14px;color:var(--text)">
+      Polza AI оценка: <strong>{{ "%.1f"|format(result.ai) }} ч</strong>
+    </div>
+    {% endif %}
+
+    {% if result.tickets %}
+    <h3 style="margin-top:32px">Релевантные тикеты</h3>
+    {% for t in result.tickets %}
+    <div class="ticket">
+      <div class="ticket-header">
+        <div class="ticket-title">{{ t.s }}</div>
+        <div>
+          <span class="score-badge">{{ "%.0f"|format(t.sc*100) }}%</span>
+          <span class="ticket-meta" style="margin-left:8px">{{ "%.1f"|format(t.h) }} ч</span>
+        </div>
+      </div>
+      <div class="ticket-desc">{{ t.d }}</div>
+      <div style="font-size:13px;color:var(--muted);margin-top:12px;display:flex;gap:16px">
+        <span>Score: <strong>{{ "%.3f"|format(t.scr) }}</strong></span>
+        <span>Overlap: <strong>{{ "%.2f"|format(t.ol) }}</strong></span>
+      </div>
+    </div>
+    {% endfor %}
+    {% endif %}
+  </div>
+  {% endif %}
+</section>
+{% endblock %}
